@@ -20,7 +20,6 @@ activity$FStn[which(activity$FStn=="B31")]="D31"
 activity$FStn[which(activity$FStn %in% paste("D",seq(from=34, to=42, by=1), sep=""))]="D33"
 activity$FStn=factor(activity$FStn)
 
-levels(activity$FStn)
 
 #NAs
 activity$Ncrossing[which(is.na(activity$Ncrossing))]=8
@@ -30,7 +29,7 @@ activity$Ncrossing[which(is.na(activity$Ncrossing))]=8
 
 activity$Date[which(activity$Date=="11-01-2015")]="11-01-2016"
 activity$Date=as.factor(activity$Date)
-levels(activity$Date)
+
 
 #Remove Sumit's data
 activity=activity[-(which(activity$Date %in% c("02-01-2016","03-01-2016", "04-01-2016", "05-01-2016" ))),]
