@@ -175,3 +175,4 @@ for(i in mPhase){
   boxplot(mAct.df$meanCrossings[mAct.df$moonPhase==i]~mAct.df$habitat[mAct.df$moonPhase==i]+mAct.df$NF[mAct.df$moonPhase==i], ylab="Number of crossings", main=i)
 }
 
+boxplot(mAct.df$meanCrossings~mAct.df$moonPhase+mAct.df$habitat+mAct.df$NF)
