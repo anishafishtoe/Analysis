@@ -27,7 +27,8 @@ guds$PrintsInside=factor(guds$PrintsInside)
 #Correct ant and bird entries
 guds$AntBirdN[which(guds$AntBirdN=="")]=NA
 guds$AntBirdN[which(guds$AntBirdN=="A ")]="A"
-which(guds$AntBirdN=="I")
+guds$AntBirdN[which(guds$AntBirdN=="I")]=NA
+guds$AntBirdF[which(guds$AntBirdF=="I")]=NA
 
 guds$AntBirdN=factor(guds$AntBirdN)
 guds$AntBirdF=factor(guds$AntBirdF)
@@ -71,29 +72,35 @@ table(guds$phaseRep[which(guds$AntBirdF=="B"|guds$AntBirdF=="AB" & !is.na(guds$P
 
 #How much did ants and birds eat up the seeds
 
-boxplot(guds$GUDN[which(guds$AntBirdN=="A" & is.na(guds$PrintsInside))], ylab="Seeds harvested", xlab="Ants at near tray")
-boxplot(guds$GUDF[which(guds$AntBirdF=="A" & is.na(guds$PrintsInside))], ylab="Seeds harvested", xlab="Ants at far tray")
+guds.ants=c(guds$GUDN[which(guds$AntBirdN=="A" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="A" & is.na(guds$PrintsInside))] )
+boxplot(guds.ants, xlab="Ants", ylab="Number of seeds harvested")
 
-boxplot(guds$GUDN[which(guds$AntBirdN=="B" & is.na(guds$PrintsInside))], ylab="Seeds harvested", xlab="Birds at near tray")
-boxplot(guds$GUDF[which(guds$AntBirdF=="B" & is.na(guds$PrintsInside))], ylab="Seeds harvested", xlab="Birds at far tray")
+guds.birds=c(guds$GUDN[which(guds$AntBirdN=="B" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="B" & is.na(guds$PrintsInside))] )
+boxplot(guds.birds, xlab="Birds", ylab="Number of seeds harvested")
 
-boxplot(guds$GUDN[which(guds$AntBirdN=="B" & is.na(guds$PrintsInside) & guds$phaseRep=="Wane1")], ylab="Seeds harvested", xlab="Birds at near tray")
-boxplot(guds$GUDF[which(guds$AntBirdF=="B" & is.na(guds$PrintsInside) & guds$phaseRep=="Wane2")], ylab="Seeds harvested", xlab="Birds at far tray")
+guds.antbird=c(guds$GUDN[which(guds$AntBirdN=="AB" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="AB" & is.na(guds$PrintsInside))] )
+boxplot(guds.antbird, xlab="Ants and birds", ylab="Number of seeds harvested")
 
 #If only ants/birds fed from the stations, set GUD as 3.
 
 guds$GUDN[!is.na(guds$AntBirdN) & is.na(guds$PrintsInside)]=3
 guds$GUDF[!is.na(guds$AntBirdF) & is.na(guds$PrintsInside)]=3
 
+#If gerbils and birds/ants fed from feeding station, set GUD as NA
+
+guds$GUDN[which(guds$AntBirdN %in% c("AB","B") & !is.na(guds$PrintsInside))]=NA
+guds$GUDF[which(guds$AntBirdF %in% c("AB","B") & !is.na(guds$PrintsInside))]=NA
 
 #mean guds per feeding station
 
 mGudN.df=aggregate(guds$GUDN[-which(is.na(guds$GUDN))], by=list(phaseRep=guds$phaseRep[-which(is.na(guds$GUDN))], fStn=guds$FStn[-which(is.na(guds$GUDN))], habitat=guds$Habitat[-which(is.na(guds$GUDN))], moonPhase=guds$MoonPhase[-which(is.na(guds$GUDN))]), mean)
-colnames(mGudN.df)[5]="meanCrossings"
+colnames(mGudN.df)[5]="meanGUD"
 mGudN.df$nf=rep("N",nrow(mGudN.df))
 
 mGudF.df=aggregate(guds$GUDF[-which(is.na(guds$GUDF))], by=list(phaseRep=guds$phaseRep[-which(is.na(guds$GUDF))], fStn=guds$FStn[-which(is.na(guds$GUDF))], habitat=guds$Habitat[-which(is.na(guds$GUDF))], moonPhase=guds$MoonPhase[-which(is.na(guds$GUDF))]), mean)
-colnames(mGudF.df)[5]="meanCrossings"
+colnames(mGudF.df)[5]="meanGUD"
 mGudF.df$nf=rep("F",nrow(mGudF.df))
 
 gMean=rbind(mGudN.df, mGudF.df)
+colnames(gMean)[which(colnames(gMean)=="nf")]="feedingTrayPosition"
+gMean$feedingTrayPosition=factor(gMean$feedingTrayPosition)
