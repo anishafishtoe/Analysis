@@ -1,4 +1,3 @@
-#ANOVA activity
 
 setwd("F:/NCBS/Thesis/Data/")
 activity= read.csv("Footprints.csv", as.is=T)
@@ -62,4 +61,5 @@ activity$phaseRep[activity$Date %in% date.df[["wx2"]]]="Wax2"
 
 mAct.df=aggregate(activity$Ncrossing, by=list(phaseRep=activity$phaseRep, fStn=activity$FStn, NF=activity$NF, habitat=activity$Habitat, moonPhase=activity$MoonPhase), mean)
 colnames(mAct.df)[6]="meanCrossings"
-mAct.df$moonPhase
+colnames(mAct.df)[colnames(mAct.df)=="NF"]="FeedingTrayPosition"
+
