@@ -4,24 +4,12 @@ setwd("F:/NCBS/Thesis/Data/")
 
 expGuds=read.csv("Tree cutting exp2904.csv")
 
-str(expGuds)
-length(which(is.na(expGuds$GUDN)))
-length(which(is.na(expGuds$GUDF)))
 
-length(which(expGuds$GUDN>3))
-length(which(expGuds$GUDF>3))
-
-stripchart(expGuds$GUDN)
-stripchart(expGuds$GUDF)
-
-unique(expGuds$FStn)
+#Correct feeding station name
 expGuds$FStn[which(expGuds$FStn=="TI")]="T1"
 
 treesUncut= unique(grep("nt+",expGuds$FStn , ignore.case=T, value=T, perl=T))
 treesCut=setdiff(unique(expGuds$FStn), treesCut)
-
-#Mean guds for cut vs un-cut trees.
-
 
 #mean guds
 
