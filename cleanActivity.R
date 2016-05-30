@@ -57,9 +57,17 @@ activity$phaseRep[activity$Date %in% date.df[["wx1"]]]="Wax1"
 activity$phaseRep[activity$Date %in% date.df[["wx2"]]]="Wax2"
 
 
-#mean activity per feeding station
+#Drop foot measurement columns
+activity=activity[-c(which(colnames(activity)%in% c("FLength","FWidth","HLength","HWidth","HTLength","HTWidth","Digging","FTLength","Comments")))]
 
+#Create another column in activity for month
+activity$month=ifelse(activity$phaseRep %in% grep("1$",activity$phaseRep, value = T), "Month1", "Month2")
+
+#mean activity per feeding station
 mAct.df=aggregate(activity$Ncrossing, by=list(phaseRep=activity$phaseRep, fStn=activity$FStn, NF=activity$NF, habitat=activity$Habitat, moonPhase=activity$MoonPhase), mean)
 colnames(mAct.df)[6]="meanCrossings"
 colnames(mAct.df)[colnames(mAct.df)=="NF"]="FeedingTrayPosition"
 
+#Create another column phaseRep1 for month
+mAct.df$month=ifelse(mAct.df$phaseRep %in% grep("1$",mAct.df$phaseRep, value = T), "Month1", "Month2")
+mAct.df$month=factor(mAct.df$month)
