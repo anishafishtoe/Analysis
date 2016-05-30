@@ -70,17 +70,6 @@ table(guds$phaseRep[which(guds$AntBirdN=="B"|guds$AntBirdN=="AB" & !is.na(guds$P
 table(guds$phaseRep[which(guds$AntBirdF=="B"|guds$AntBirdF=="AB" & !is.na(guds$PrintsInside))])
 
 
-#How much did ants and birds eat up the seeds
-
-guds.ants=c(guds$GUDN[which(guds$AntBirdN=="A" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="A" & is.na(guds$PrintsInside))] )
-boxplot(guds.ants, xlab="Ants", ylab="Number of seeds harvested")
-
-guds.birds=c(guds$GUDN[which(guds$AntBirdN=="B" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="B" & is.na(guds$PrintsInside))] )
-boxplot(guds.birds, xlab="Birds", ylab="Number of seeds harvested")
-
-guds.antbird=c(guds$GUDN[which(guds$AntBirdN=="AB" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="AB" & is.na(guds$PrintsInside))] )
-boxplot(guds.antbird, xlab="Ants and birds", ylab="Number of seeds harvested")
-
 #If only ants/birds fed from the stations, set GUD as 3.
 
 guds$GUDN[!is.na(guds$AntBirdN) & is.na(guds$PrintsInside)]=3
@@ -104,3 +93,8 @@ mGudF.df$nf=rep("F",nrow(mGudF.df))
 gMean=rbind(mGudN.df, mGudF.df)
 colnames(gMean)[which(colnames(gMean)=="nf")]="feedingTrayPosition"
 gMean$feedingTrayPosition=factor(gMean$feedingTrayPosition)
+
+#Create another column in activity for month
+gMean$month=ifelse(gMean$phaseRep %in% grep("1$",gMean$phaseRep, value = T), "Month1", "Month2")
+gMean$month=factor(gMean$month)
+
