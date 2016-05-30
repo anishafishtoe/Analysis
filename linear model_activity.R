@@ -1,4 +1,6 @@
 setwd("F:/NCBS/Thesis/Data/")
+library(ggplot2)
+library(psych)
 
 
 hist(mAct.df$meanCrossings)
@@ -50,6 +52,17 @@ ggplot(act.mhab, aes(x=FeedingTrayPosition, y=mean))+
   ylab('Mean Number of Crossings')+
   scale_fill_grey()
 
+  #4. month
+
+act.month=with(mAct.df, describeBy(sqrt(meanCrossings),month , mat=T, digits=4))
+names(act.month)[names(act.month)=="group1"]="Month"
+limits=with(act.month,aes(ymax=mean+(1.96*se), ymin=mean-(1.96*se)))
+dodge=position_dodge(width=0.9)
+ggplot(act.month, aes(x=month, y=mean))+ 
+  geom_point(stat='identity', position=dodge)+
+  geom_errorbar(limits, position=dodge, width=0.25)+
+  ylab('Mean Number of Crossings')+
+  scale_fill_grey()
 
 #plot interaction between moon phase and habitat
 
@@ -62,6 +75,7 @@ ggplot(act.mPhase.hab.summary, aes(x=MoonPhase, y=mean, fill=Habitat))+
   geom_bar(stat='identity', position=dodge)+
   geom_errorbar(limits, position=dodge, width=0.25)+
   ylab('Mean Number of Crossings')+
+  theme_set(theme_gray(base_size = 18))+
   scale_fill_grey()
 
 #plot interaction between moon phase and microhabitat
@@ -75,7 +89,23 @@ ggplot(act.mPhase.trayPos.summary, aes(x=MoonPhase, y=mean, fill=FeedingTrayPosi
   geom_bar(stat='identity', position=dodge)+
   geom_errorbar(limits, position=dodge, width=0.25)+
   ylab('Mean Number of Crossings')+
+  theme_set(theme_gray(base_size = 18))+
   scale_fill_grey()
+
+#plot interaction between habitat and microhabitat
+
+act.hab.trayPos.summary=with(mAct.df,describeBy(sqrt(meanCrossings), list(habitat, FeedingTrayPosition), mat=T, digits=4))
+names(act.hab.trayPos.summary)[names(act.hab.trayPos.summary)=="group1"]="Habitat"
+names(act.hab.trayPos.summary)[names(act.hab.trayPos.summary)=="group2"]="FeedingTrayPosition"
+limits=with(act.hab.trayPos.summary,aes(ymax=mean+(1.96*se), ymin=mean-(1.96*se)))
+dodge=position_dodge(width=0.9)
+ggplot(act.hab.trayPos.summary, aes(x=Habitat, y=mean, fill=FeedingTrayPosition))+ 
+  geom_bar(stat='identity', position=dodge)+
+  geom_errorbar(limits, position=dodge, width=0.25)+
+  ylab('Mean Number of Crossings')+
+  theme_set(theme_gray(base_size = 18))+
+  scale_fill_grey()
+
 
 
 #plot interaction between moon phase, habitat and microhabitat
@@ -93,8 +123,26 @@ ggplot(data=act.mPhase.hab.muhab.summary, aes(x=Habitat, y=mean, fill=FeedingTra
   theme(panel.margin=unit(0,"lines"), strip.background=element_blank())+
   geom_errorbar(limits, position=dodge, width=0.25)+
   ylab("Mean Number of Crossings")+
+  theme_set(theme_gray(base_size = 18))+
   scale_fill_grey()
 
+#plot interaction between moon phase, habitat and microhabitat for different months
+
+act.mPhase.hab.muhab.mon.summary=with(mAct.df,describeBy(sqrt(meanCrossings), list(moonPhase, habitat, FeedingTrayPosition, month), mat=T, digits=4))
+names(act.mPhase.hab.muhab.mon.summary)[names(act.mPhase.hab.muhab.mon.summary)=="group1"]="MoonPhase"
+names(act.mPhase.hab.muhab.mon.summary)[names(act.mPhase.hab.muhab.mon.summary)=="group2"]="Habitat"
+names(act.mPhase.hab.muhab.mon.summary)[names(act.mPhase.hab.muhab.mon.summary)=="group3"]="FeedingTrayPosition"
+names(act.mPhase.hab.muhab.mon.summary)[names(act.mPhase.hab.muhab.mon.summary)=="group4"]="Month"
+limits=with(act.mPhase.hab.muhab.mon.summary,aes(ymax=mean+(1.96*se), ymin=mean-(1.96*se)))
+dodge=position_dodge(width=0.9)
+
+ggplot(data=act.mPhase.hab.muhab.mon.summary, aes(x=Month, y=mean, fill=FeedingTrayPosition))+
+  geom_bar(stat="identity", position="dodge")+
+  facet_grid(Habitat~MoonPhase, switch="x", scales="free_x")+
+  
+  geom_errorbar(limits, position=dodge, width=0.25)+
+  ylab("Mean Number of Crossings")+
+  scale_fill_grey()
 
 
 #lm interaction
