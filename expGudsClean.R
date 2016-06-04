@@ -27,5 +27,6 @@ gudMean$BefOnAft=factor(gMeans$BefOnAft, c("Before","On","After"))
 #convert GUDS from wide to long
 expGuds=gather(expGuds, NF, GUD, GUDN, GUDF)
 expGuds$NF= ifelse(expGuds$NF=="GUDN","N","F")
-expGuds1=arrange(expGuds, Date, FStn)
-head(expGuds)
+
+#write into file
+write.csv(expGuds,"expGudsClean.csv")
