@@ -2,9 +2,6 @@
 
 setwd("F:/NCBS/Thesis/Data/")
 guds=read.csv("GUDs.csv")
-str(guds)
-
-sort(levels(guds$FStn))
 
 #Delete columns X, X.1, Husksf, HusksN
 guds=guds[,-(14:17)]
@@ -65,23 +62,44 @@ length(which(guds$AntBirdF=="B"|guds$AntBirdF=="AB"))
 table(guds$phaseRep[which(guds$AntBirdN=="B"|guds$AntBirdN=="AB")])
 
 #which phase rep had birds and gerbils feeding
-
 table(guds$phaseRep[which(guds$AntBirdN=="B"|guds$AntBirdN=="AB" & !is.na(guds$PrintsInside))])
 table(guds$phaseRep[which(guds$AntBirdF=="B"|guds$AntBirdF=="AB" & !is.na(guds$PrintsInside))])
 
 
 #If only ants/birds fed from the stations, set GUD as 3.
-
 guds$GUDN[!is.na(guds$AntBirdN) & is.na(guds$PrintsInside)]=3
 guds$GUDF[!is.na(guds$AntBirdF) & is.na(guds$PrintsInside)]=3
 
 #If gerbils and birds/ants fed from feeding station, set GUD as NA
-
 guds$GUDN[which(guds$AntBirdN %in% c("AB","B") & !is.na(guds$PrintsInside))]=NA
 guds$GUDF[which(guds$AntBirdF %in% c("AB","B") & !is.na(guds$PrintsInside))]=NA
 
-#mean guds per feeding station
+#Delete unnecessary columns
+guds= guds[-which(colnames(guds) %in% c("PrintsAround", "PrintsInside", "Destroyed", "Digging", "Comments"))]
 
+#Create a new column in GUDs for night
+library(dplyr)
+guds$Date=factor(guds$Date, c("24-12-2015", "25-12-2015", "26-12-2015",
+                                      "11-01-2016", "12-01-2016", "13-01-2016",
+                                      "16-01-2016","17-01-2016","18-01-2016",
+                                      "24-01-2016", "25-01-2016", "26-01-2016",
+                                      "31-01-2016", "01-02-2016","02-02-2016",
+                                      "08-02-2016","09-02-2016", "10-02-2016",
+                                      "16-02-2016","17-02-2016","18-02-2016",
+                                      "01-03-2016", "02-03-2016", "03-03-2016"))
+guds=guds %>% group_by(phaseRep) %>% mutate(Night=paste("N",as.numeric(factor(Date)), sep=""))
+
+
+#Create a new column in GUDS for month
+guds$month=ifelse(guds$phaseRep %in% grep("1$",activity$phaseRep, value = T), "Month1", "Month2")
+
+#Convert GUDS from wide to long
+library(tidyr)
+guds=gather(guds, NF, GUD, GUDN, GUDF)
+guds$NF= ifelse(guds$NF=="GUDN","N","F")
+guds=arrange(guds, Date, FStn)
+
+#mean guds per feeding station
 mGudN.df=aggregate(guds$GUDN[-which(is.na(guds$GUDN))], by=list(phaseRep=guds$phaseRep[-which(is.na(guds$GUDN))], fStn=guds$FStn[-which(is.na(guds$GUDN))], habitat=guds$Habitat[-which(is.na(guds$GUDN))], moonPhase=guds$MoonPhase[-which(is.na(guds$GUDN))]), mean)
 colnames(mGudN.df)[5]="meanGUD"
 mGudN.df$nf=rep("N",nrow(mGudN.df))
@@ -91,10 +109,13 @@ colnames(mGudF.df)[5]="meanGUD"
 mGudF.df$nf=rep("F",nrow(mGudF.df))
 
 gMean=rbind(mGudN.df, mGudF.df)
-colnames(gMean)[which(colnames(gMean)=="nf")]="feedingTrayPosition"
-gMean$feedingTrayPosition=factor(gMean$feedingTrayPosition)
+colnames(gMean)[which(colnames(gMean)=="nf")]="FeedingTrayPosition"
+gMean$FeedingTrayPosition=factor(gMean$FeedingTrayPosition)
 
-#Create another column in activity for month
+#Create another column in gMean for month
 gMean$month=ifelse(gMean$phaseRep %in% grep("1$",gMean$phaseRep, value = T), "Month1", "Month2")
 gMean$month=factor(gMean$month)
 
+#write into file
+write.csv(gMean, "gudMean.csv")
+write.csv(guds, "GUDClean.csv")
