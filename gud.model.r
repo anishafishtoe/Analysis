@@ -2,14 +2,15 @@
 library(lme4)
 library(car)
 
-#habitat
+#Are GUDS normal?
+hist(gMean$meanGUD, main="", xlab="Mean GUD")
+hist(log(gMean$meanGUD))
+#main effects, no interaction
 
-
-#moon phase
-
-#microhabitat
-
-#month
+microhabitat=lmer(meanGUD~FeedingTrayPosition+(1|fStn), REML=FALSE, data=gMean, family="poisson")
+habitat=lmer(meanGUD~habitat+(1|fStn), REML=FALSE, data=gMean)
+moonPhase=lmer(meanGUD~moonPhase+(1|fStn), REML=FALSE, data=gMean)
+month=lmer(meanGUD~month+(1|fStn), REML=FALSE, data=gMean)
 
 
 #Full model and significance testing for fixed effects
