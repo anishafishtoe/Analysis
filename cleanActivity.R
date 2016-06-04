@@ -1,11 +1,9 @@
 
 setwd("F:/NCBS/Thesis/Data/")
 activity= read.csv("Footprints.csv", as.is=T)
-nrow(activity)
-str(activity)
+
 
 #Convert moon-phase, habitat, date, fst, NF to factors
-
 activity$MoonPhase=as.factor(activity$MoonPhase)
 activity$Habitat=as.factor(activity$Habitat)
 activity$FStn=as.factor(activity$FStn)
@@ -25,7 +23,6 @@ activity$Ncrossing[which(is.na(activity$Ncrossing))]=8
 
 
 #Correct dates
-
 activity$Date[which(activity$Date=="11-01-2015")]="11-01-2016"
 activity$Date=as.factor(activity$Date)
 
@@ -34,11 +31,7 @@ activity$Date=as.factor(activity$Date)
 activity=activity[-(which(activity$Date %in% c("02-01-2016","03-01-2016", "04-01-2016", "05-01-2016" ))),]
 activity$Date=factor(activity$Date)
 
-levels(activity$Date)
-
-
 #Remove duplicate entries for each feeding station
-
 activity=activity[!duplicated(activity[,c(1,4,5)]),]
 
 #Column for phase replicates
@@ -58,12 +51,24 @@ activity$phaseRep[activity$Date %in% date.df[["wx2"]]]="Wax2"
 
 
 #Drop foot measurement columns
-activity=activity[-c(which(colnames(activity)%in% c("FLength","FWidth","HLength","HWidth","HTLength","HTWidth","Digging","FTLength","Comments")))]
+activity=activity[-c(which(colnames(activity)%in% c("FLength","FWidth","HLength","HWidth","HTLength","HTWidth","Digging","FTLength","Comments", "FTWidth","InOut")))]
 
 #Create another column in activity for month
 activity$month=ifelse(activity$phaseRep %in% grep("1$",activity$phaseRep, value = T), "Month1", "Month2")
 
-#mean activity per feeding station
+#Create column Night within activity numbering each night of sampling
+library(dplyr)
+activity$Date=factor(activity$Date, c("24-12-2015", "25-12-2015", "26-12-2015",
+                                      "11-01-2016", "12-01-2016", "13-01-2016",
+                                      "16-01-2016","17-01-2016","18-01-2016",
+                                      "24-01-2016", "25-01-2016", "26-01-2016",
+                                      "31-01-2016", "01-02-2016","02-02-2016",
+                                      "08-02-2016","09-02-2016", "10-02-2016",
+                                      "16-02-2016","17-02-2016","18-02-2016",
+                                      "01-03-2016", "02-03-2016", "03-03-2016"))
+activity=activity %>% group_by(phaseRep) %>% mutate(Night=paste("N",as.numeric(factor(Date)), sep=""))
+
+#Create a new dataframe containing mean activity per feeding station
 mAct.df=aggregate(activity$Ncrossing, by=list(phaseRep=activity$phaseRep, fStn=activity$FStn, NF=activity$NF, habitat=activity$Habitat, moonPhase=activity$MoonPhase), mean)
 colnames(mAct.df)[6]="meanCrossings"
 colnames(mAct.df)[colnames(mAct.df)=="NF"]="FeedingTrayPosition"
@@ -71,3 +76,8 @@ colnames(mAct.df)[colnames(mAct.df)=="NF"]="FeedingTrayPosition"
 #Create another column phaseRep1 for month
 mAct.df$month=ifelse(mAct.df$phaseRep %in% grep("1$",mAct.df$phaseRep, value = T), "Month1", "Month2")
 mAct.df$month=factor(mAct.df$month)
+
+
+#write dataframes into file
+write.csv(mAct.df, "meanActivity.csv")
+write.csv(activity, "activityClean.csv")
