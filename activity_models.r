@@ -1,4 +1,11 @@
+library(lme4)
+library(car)
+
 #anova
+
+setwd("F:/NCBS/Thesis/Data/")
+activity=read.csv("activityClean.csv")
+mAct.df=read.csv("meanActivity.csv")
 
 #Is mean crossings normally distributed?
 hist(mAct.df$meanCrossings) #--- Nay, it is not!
@@ -8,22 +15,6 @@ hist(log(mAct.df$meanCrossings))
 shapiro.test(log(mAct.df$meanCrossings))
 head(mAct.df)
 
-#cast from long to wide
-library(reshape2)
-library(dplyr)
-mAct.df$habitat=NULL
-mAct.df$moonPhase=NULL
-mAct.df=mAct.df %>% group_by(phaseRep, fStn) %>% mutate(id=row_number())
-mAct.df.wide=dcast(mAct.df,fStn+id~phaseRep+FeedingTrayPosition , value.var = "meanCrossings")
-
-#Create idataframe
-df.struc= data.frame(phaseRep=rep(unique(mAct.df$phaseRep), each=2), FeedingTrayPosition=rep(c("F","N"),8))
-
-#Rename column names of mAct.df.wide to match idataframe
-colnames(mAct.df.wide)=gsub("_","",colnames(mAct.df.wide))
-
-act.bind=with(mAct.df.wide,cbind(Full1F, Full1N, Full2F, Full2N, New1F, New1N, New2F, New2N, Wane1F, Wane1N, Wane2F, Wane2N, Wax1F, Wax1N, Wax2F, Wax2N))
-act.model=lm(act.bind~1)
 
 #23-05-2016: Mixed effect model
 
@@ -41,7 +32,7 @@ boxplot(meanCrossings~month, data=mAct.df)
 boxplot(meanCrossings~month+moonPhase, data=mAct.df)
 
 #full, null and partial mixed effects models without interaction
-library(lme4)
+
 
 act.me.null=lmer(meanCrossings~FeedingTrayPosition+(1|fStn)+(1|month), REML=FALSE, data=mAct.df)
 act.me.mp=lmer(meanCrossings~FeedingTrayPosition+moonPhase+(1|fStn)+(1|month), REML=FALSE, data=mAct.df)
@@ -110,7 +101,7 @@ summary(int.full)
 
 #p-values for fixed effects
 library(car)
-full.model=lmer(log(meanCrossings)~FeedingTrayPosition+habitat+moonPhase+month+
+full.model=lmer(meanCrossings~FeedingTrayPosition+habitat+moonPhase+month+
                   FeedingTrayPosition*habitat+ moonPhase*habitat+habitat*month+
                   habitat*moonPhase*month+
                   habitat*FeedingTrayPosition*month+
@@ -118,7 +109,23 @@ full.model=lmer(log(meanCrossings)~FeedingTrayPosition+habitat+moonPhase+month+
                     FeedingTrayPosition*moonPhase*habitat*month+  
                   (1|fStn), data=mAct.df, REML=FALSE)
 Anova(full.model)
+summary(full.model)
 
+#summary statistics 
+act.hab=with(mAct.df, describeBy(meanCrossings, habitat, mat=T, digits=4))
+summary(act.hab)
+act.hab$mean
+
+act.microhab=with(mAct.df, describeBy(meanCrossings, FeedingTrayPosition, mat=T, digits=4))
+
+act.moonphase=with(mAct.df, describeBy(meanCrossings, moonPhase, mat=T, digits=4))
+
+#Tukey's test
+library(multcomp)
+model.additive=lmer(meanCrossings~FeedingTrayPosition+habitat+moonPhase+month+(1|fStn), data=mAct.df, REML=FALSE)
+Anova(model.additive)
+
+summary(glht(model.additive, mcp(moonPhase="Tukey")))
 
 #GLMM
 act.int.nullr=lmer(meanCrossings~1+(1|fStn), REML=FALSE, data=mAct.df, family="poisson")
@@ -143,3 +150,48 @@ full.int=lmer(meanCrossings~FeedingTrayPosition*habitat*moonPhase*month+(1|fStn)
 
 anova(act.int.nullr, microhabitat,habitat, moonPhase, month, habitat.microhab.int,habitat.mon,
       hab.microhab.mon.int, habitat.moonph.int,  hab.moonph.mon.int, hab.moonph.microhab, int.full)
+
+
+
+#09-06
+library(nlme)
+
+model.gls= gls(data= activity, log(Ncrossing)~MoonPhase*Habitat*NF*month)
+
+full.model3=lme(data=activity, log(Ncrossing)~ MoonPhase*Habitat*NF*month , random= ~1|FStn, method="REML")
+full.model4=lme(data=activity, log(Ncrossing)~ MoonPhase*Habitat*NF*month , random= ~1|MoonPhase/Night, , method="REML")
+plot(full.model3)
+#check gls vs lmer
+anova(model.gls, full.model3, full.model4) #model with random intercept is better
+
+res= resid(full.model3, type="normalized")
+fit= fitted(full.model3)
+op <- par(mfrow = c(2, 3), mar = c(4, 4, 3, 2))
+plot(x=fit, y=res, xlab="Fitted", ylab="Residuals")
+boxplot(res~MoonPhase, data= activity, ylab="Residuals")
+boxplot(res~Habitat, data= activity, ylab="Residuals")
+boxplot(res~NF, data= activity, ylab="Residuals")
+boxplot(res~month, data= activity, ylab="Residuals")
+
+#GLMM
+
+full.model.glmm=glmer(data=activity, Ncrossing~ MoonPhase*Habitat*NF*month +(1|FStn),
+                     family="poisson")
+#Test for over-dispersion
+mq1= update(full.model.glmm, family="quasipoisson")
+(phi=lme4:::sigma(mq1))
+
+#LMER full model 
+lmer.fullmodel=lmer(data=mAct.df,log(meanCrossings) ~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn), REML=FALSE)
+lmer.fullmodel.nest=lmer(data=mAct.df,log(meanCrossings) ~ moonPhase*habitat*FeedingTrayPosition*month +(1|moonPhase/fStn), REML=FALSE)
+lmer.sig= lmer(data=mAct.df,log(meanCrossings)~moonPhase+habitat+FeedingTrayPosition+month+moonPhase*month+(1|fStn), REML=FALSE)
+anova(lmer.fullmodel.nest, lmer.fullmodel)
+summary(lmer.sig)
+
+lmer.fullmodel.month=lmer(data=subset(mAct.df, month="Month2"),meanCrossings ~ moonPhase*habitat*FeedingTrayPosition +(1|fStn), REML=FALSE)
+plot(lmer.fullmodel.month)
+Anova(lmer.fullmodel.month)
+summary(lmer.fullmodel.month)
+
+with(data=subset(mAct.df, month="Month2"),boxplot(meanCrossings~habitat+FeedingTrayPosition))
+     
