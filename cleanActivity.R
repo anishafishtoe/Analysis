@@ -68,6 +68,33 @@ activity$Date=factor(activity$Date, c("24-12-2015", "25-12-2015", "26-12-2015",
                                       "01-03-2016", "02-03-2016", "03-03-2016"))
 activity=activity %>% group_by(phaseRep) %>% mutate(Night=paste("N",as.numeric(factor(Date)), sep=""))
 
+#Create a new footprints dataframe with zeroes for trays in GUD file but not in activity file
+fStnFull=c( "A11", "A13", "A31", "A33", "B1",  "B13", "B3",  "B33", "D11", "D13", "D31", "D33", "L11", "L13", "L31", "L33")
+FStnDF=data.frame(Date=vector(), MoonPhase=vector(), Habitat=vector(), FStn=vector(), NF=vector(), NCrossing=vector(), phaseRep=vector(), month=vector(), Night=vector())
+activity %>% group_by(phaseRep) %>% group_by(Night) %>% mutate(FStnDF$FStn= setdiff(fStnFull, levels(FStn)))
+#head(activity %>% group_by(phaseRep)) %>% 
+
+for(i in activity$phaseRep){
+  for(j in activity$Night)
+  {
+    fStnAbs=setdiff(fStnFull, activity$FStn[activity$phaseRep==i & activity$Night==j])
+    for(k in fStnAbs){
+      activity=c(activity, c())
+    }
+  }
+}
+
+sapply( activity$phaseRep, function(x){
+  for(j in activity$Night)
+  {
+    fStnAbs=setdiff(fStnFull, activity$FStn[activity$phaseRep==i & activity$Night==j])
+    for(k in fStnAbs){
+      activity=c(activity, c())
+    }
+  }
+})
+
+
 #Create a new dataframe containing mean activity per feeding station
 mAct.df=aggregate(activity$Ncrossing, by=list(phaseRep=activity$phaseRep, fStn=activity$FStn, NF=activity$NF, habitat=activity$Habitat, moonPhase=activity$MoonPhase), mean)
 colnames(mAct.df)[6]="meanCrossings"
