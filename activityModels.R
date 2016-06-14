@@ -1,3 +1,5 @@
+#Old models
+
 #lm no interaction
 
 activity.lm=lm(log(mAct.df$meanCrossings)~mAct.df$moonPhase+mAct.df$FeedingTrayPosition+mAct.df$habitat)
