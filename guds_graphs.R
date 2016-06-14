@@ -227,6 +227,15 @@ ggplot(data=mPhase.hab.muhab.summary, aes(x=Habitat, y=mean, fill=FeedingTrayPos
   theme_set(theme_gray(base_size = 20))+
   scale_fill_grey()
 
+#plot activity across night
+ggplot(data=subset(guds, !is.na(GUD)), aes(x=MoonPhase, y=GUD, fill=Night))+geom_boxplot()+
+  theme_set(theme_gray(base_size = 20))+scale_fill_brewer()
+
+#ggplot activity across night for each month
+ggplot(data=subset(guds, !is.na(GUD)), aes(x=MoonPhase, y=GUD, fill=Night))+geom_boxplot()+
+  facet_wrap(~month)+
+  theme_set(theme_gray(base_size = 20))+scale_fill_brewer()
+
 
 #anova
 gud.anova=aov(gMean$meanGUD~gMean$moonPhase*gMean$habitat*gMean$feedingTrayPosition)
