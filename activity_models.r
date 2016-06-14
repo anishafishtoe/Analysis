@@ -1,11 +1,21 @@
 library(lme4)
 library(car)
 
-#anova
 
 setwd("F:/NCBS/Thesis/Data/")
 activity=read.csv("activityClean.csv")
 mAct.df=read.csv("meanActivity.csv")
+
+#which distribution fits the data? 
+qqp(mAct.df$meanCrossings, "norm")
+qqp(mAct.df$meanCrossings, "lnorm")
+nbinom=fitdistr(mAct.df$meanCrossings,"Negative Binomial")
+qqp(mAct.df$meanCrossings,"nbinom", size= nbinom$estimate[[1]], mu=nbinom$estimate[[2]])
+poisson=fitdistr(mAct.df$meanCrossings, "Poisson")
+qqp(mAct.df$meanCrossings, "pois", poisson$estimate)
+gamma=fitdistr(mAct.df$meanCrossings, "gamma")
+qqp(mAct.df$meanCrossings, "gamma", shape=gamma$estimate[[1]], rate=gamma$estimate[[2]])
+
 
 #Is mean crossings normally distributed?
 hist(mAct.df$meanCrossings) #--- Nay, it is not!
@@ -181,17 +191,51 @@ full.model.glmm=glmer(data=activity, Ncrossing~ MoonPhase*Habitat*NF*month +(1|F
 mq1= update(full.model.glmm, family="quasipoisson")
 (phi=lme4:::sigma(mq1))
 
+
+#-------------------------------13-06------------------------
 #LMER full model 
-lmer.fullmodel=lmer(data=mAct.df,log(meanCrossings) ~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn), REML=FALSE)
-lmer.fullmodel.nest=lmer(data=mAct.df,log(meanCrossings) ~ moonPhase*habitat*FeedingTrayPosition*month +(1|moonPhase/fStn), REML=FALSE)
-lmer.sig= lmer(data=mAct.df,log(meanCrossings)~moonPhase+habitat+FeedingTrayPosition+month+moonPhase*month+(1|fStn), REML=FALSE)
-anova(lmer.fullmodel.nest, lmer.fullmodel)
-summary(lmer.sig)
+lm.full=lmer(data=mAct.df, meanCrossings~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn))
+plot(lm.full)
+  #transform response
+  lm.fullT=lmer(data=mAct.df, log(meanCrossings)~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn))
+  plot(lm.fullT)  
+  lm.fullT1=lmer(data=mAct.df, log10(meanCrossings+1)~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn))
+  plot(lm.fullT1)  
+  lm.fullT2=lmer(data=mAct.df, sqrt(meanCrossings)~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn))
+  plot(lm.fullT2)  
+  
+lm.full.actnight=lmer(data=activity, Ncrossing~ MoonPhase*Habitat*NF*month +(1|FStn))
+plot(lm.full.actnight)
+  lm.full.actnight=lmer(data=activity, log10(Ncrossing+1)~ MoonPhase*Habitat*NF*month +(1|FStn))
+  plot(lm.full.actnight)
+Anova(lm.full.actnight)
 
-lmer.fullmodel.month=lmer(data=subset(mAct.df, month="Month2"),meanCrossings ~ moonPhase*habitat*FeedingTrayPosition +(1|fStn), REML=FALSE)
-plot(lmer.fullmodel.month)
-Anova(lmer.fullmodel.month)
-summary(lmer.fullmodel.month)
+#compare AIC and deviance of models
+act.moon= lmer(data=activity, Ncrossing~ MoonPhase +(1|FStn))
+act.habitat= lmer(data=activity, Ncrossing~ Habitat +(1|FStn))
+act.microhab=  lmer(data=activity, Ncrossing~ NF +(1|FStn))
+act.season=  lmer(data=activity, Ncrossing~ month +(1|FStn))
+act.moonHab=lmer(data=activity, Ncrossing~ MoonPhase*Habitat +(1|FStn))
+act.moonSeason=lmer(data=activity, Ncrossing~ MoonPhase*month +(1|FStn))
+act.habMicro=lmer(data=activity, Ncrossing~ Habitat*NF +(1|FStn))
+act.habSeason=lmer(data=activity, Ncrossing~ Habitat*month +(1|FStn))
+act.moonHabMicrohab=lmer(data=activity, Ncrossing~ Habitat*MoonPhase*NF +(1|FStn))
+act.habMicrohabSeason=lmer(data=activity, Ncrossing~ Habitat*NF*month +(1|FStn))
+act.moonHabSeason=lmer(data=activity, Ncrossing~ Habitat*MoonPhase*month +(1|FStn))
+anova(act.moon, act.habitat, act.microhab, act.season, act.moonHab, act.moonSeason ,act.habMicro, 
+      act.habSeason, act.moonHabMicrohab, act.moonHabSeason)
 
-with(data=subset(mAct.df, month="Month2"),boxplot(meanCrossings~habitat+FeedingTrayPosition))
-     
+#Using mean activity
+act.moon1= lmer(data=mAct.df, meanCrossings~ moonPhase +(1|fStn))
+act.habitat1= lmer(data=mAct.df, meanCrossings~ habitat +(1|fStn))
+act.microhab1=  lmer(data=mAct.df, meanCrossings~ FeedingTrayPosition +(1|fStn))
+act.season1=  lmer(data=mAct.df, meanCrossings~ month +(1|fStn))
+act.moonHab1=lmer(data=mAct.df, meanCrossings~ moonPhase*habitat +(1|fStn))
+act.moonSeason1=lmer(data=mAct.df, meanCrossings~ moonPhase*month +(1|fStn))
+act.habMicro1=lmer(data=mAct.df, meanCrossings~ habitat*FeedingTrayPosition +(1|fStn))
+act.habSeason1=lmer(data=mAct.df, meanCrossings~ habitat*month +(1|fStn))
+act.moonHabMicrohab1=lmer(data=mAct.df, meanCrossings~ habitat*moonPhase*FeedingTrayPosition +(1|fStn))
+act.habMicrohabSeason1=lmer(data=mAct.df, meanCrossings~ habitat*FeedingTrayPosition*month +(1|fStn))
+act.moonHabSeason1=lmer(data=mAct.df, meanCrossings~ habitat*moonPhase*month +(1|fStn))
+anova(act.moon1, act.habitat1, act.microhab1, act.season1, act.moonHab1, act.moonSeason1 ,act.habMicro1, 
+      act.habSeason1, act.moonHabMicrohab1, act.moonHabSeason1)
