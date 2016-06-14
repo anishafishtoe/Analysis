@@ -1,6 +1,8 @@
 #mixed effects models
 library(lme4)
 library(car)
+library(MASS)
+
 
 #Are GUDS normal?
 hist(gMean$meanGUD, main="", xlab="Mean GUD")
@@ -14,5 +16,33 @@ month=lmer(meanGUD~month+(1|fStn), REML=FALSE, data=gMean)
 
 
 #Full model and significance testing for fixed effects
-full.model=lmer(meanGUD~feedingTrayPosition+habitat+moonPhase+month+feedingTrayPosition*habitat+feedingTrayPosition*moonPhase+moonPhase*habitat+moonPhase*month +habitat*month + feedingTrayPosition*month +feedingTrayPosition*habitat*month+habitat*moonPhase*month+feedingTrayPosition*moonPhase*habitat+(1|fStn), data=gMean, REML=FALSE)
+full.model=lmer(meanGUD~FeedingTrayPosition+habitat+moonPhase+month+FeedingTrayPosition*habitat+FeedingTrayPosition*moonPhase+moonPhase*habitat +habitat*month +FeedingTrayPosition*habitat*month+habitat*moonPhase*month+FeedingTrayPosition*moonPhase*habitat+(1|fStn), data=gMean, REML=FALSE)
 Anova(full.model)
+
+#GLMM with Laplace
+summary(glmer(meanGUD~FeedingTrayPosition+habitat+moonPhase+month+FeedingTrayPosition*habitat+
+                FeedingTrayPosition*moonPhase+moonPhase*habitat +habitat*month +
+                FeedingTrayPosition*habitat*month+habitat*moonPhase*month+
+                FeedingTrayPosition*moonPhase*habitat+(1|fStn), data= gMean, family= Gamma(link="log")))
+
+#0906
+gud.lmer.fullmodel=lmer(data=gMean, log10(meanGUD+1)~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn), REML=FALSE)
+plot(gud.lmer.fullmodel)
+
+res= residuals(gud.lmer.fullmodel)
+fit= fitted(gud.lmer.fullmodel)
+op <- par(mfrow = c(2, 3), mar = c(4, 4, 3, 2))
+plot(x=fit, y=res, xlab="Fitted", ylab="Residuals")
+boxplot(res~moonPhase, data= gMean, ylab="Residuals")
+boxplot(res~habitat, data= gMean, ylab="Residuals")
+boxplot(res~FeedingTrayPosition, data= gMean, ylab="Residuals")
+boxplot(res~month, data= gMean, ylab="Residuals")
+
+Anova(gud.lmer.fullmodel)
+
+gud.sigmodel=lmer(data=gMean, log10(meanGUD+1)~month+habitat*month+(1|fStn), REML=FALSE)
+anova(gud.lmer.fullmodel, gud.sigmodel)
+
+gud.lmer.full.month=lmer(data=subset(gMean, month =="Month2"), meanGUD~ moonPhase*habitat*FeedingTrayPosition +(1|fStn), REML=FALSE)
+plot(gud.lmer.fullmodel)
+Anova(gud.lmer.full.month)
