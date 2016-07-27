@@ -36,20 +36,6 @@ levels(expActJoin$BefOnAft)=unlist(lapply(levels(expActJoin$BefOnAft), function(
   if (x=="B") "Before" else if (x=="O") "On" else if (x=="A")"After"}))
 expActJoin$BefOnAft=factor(expActJoin$BefOnAft,levels = c("Before","On","After"))
 
-######### Don't do this if not converting to some format. Need separate FStns for random effect--
-#Replace NT names with T
-levels(exp.act$FStn)=gsub("NT", "T", levels(exp.act$FStn))
-#Create separate columns for cut and uncut, n and f
-expActJoin=arrange(expActJoin, Date, BefOnAft)
-expActJoin=expActJoin %>% group_by(Date, BefOnAft, FStn) %>% mutate(id=row_number())
-exp.act.wide=dcast(expActJoin, formula=Date+BefOnAft+FStn~cutUncut+NF, value.var = "Ncrossing")
-#Create columns containing differences between cut and uncut trees
-exp.act.wide$DiffN=with(exp.act.wide,ifelse(!is.na(Cut_N) & !is.na(Uncut_N),Cut_N-Uncut_N,NA))
-exp.act.wide$DiffF=with(exp.act.wide,ifelse(!is.na(Cut_F) & !is.na(Uncut_F),Cut_F-Uncut_F,NA))
-#differences between N and F 
-exp.act.wide$CutDiff=with(exp.act.wide,ifelse(!is.na(Cut_N) & !is.na(Cut_F),Cut_N-Cut_F,NA))
-exp.act.wide$UncutDiff=with(exp.act.wide,ifelse(!is.na(Uncut_N) & !is.na(Uncut_F),Uncut_N-Uncut_F,NA))
-#######################
 
 #Omit first day before cutting
 expActJoin= expActJoin[-which(expActJoin$Date %in% "15-03-2016"),]
@@ -68,6 +54,20 @@ exp.act.wide$BefOnAft=factor(exp.act.wide$BefOnAft)
 expActMean= aggregate(expActJoin$Ncrossing, by=list(BefOnAft=expActJoin$BefOnAft, fStn=expActJoin$FStn, FeedingTrayPosition=expActJoin$NF, cutUncut=expActJoin$cutUncut), mean)
 colnames(expActMean)[5]="meanCrossings"
 
+######### Don't do this if not converting to some format. Need separate FStns for random effect--
+#Replace NT names with T
+levels(exp.act$FStn)=gsub("NT", "T", levels(exp.act$FStn))
+#Create separate columns for cut and uncut, n and f
+expActJoin=arrange(expActJoin, Date, BefOnAft)
+expActJoin=expActJoin %>% group_by(Date, BefOnAft, FStn) %>% mutate(id=row_number())
+exp.act.wide=dcast(expActJoin, formula=Date+BefOnAft+FStn~cutUncut+NF, value.var = "Ncrossing")
+#Create columns containing differences between cut and uncut trees
+exp.act.wide$DiffN=with(exp.act.wide,ifelse(!is.na(Cut_N) & !is.na(Uncut_N),Cut_N-Uncut_N,NA))
+exp.act.wide$DiffF=with(exp.act.wide,ifelse(!is.na(Cut_F) & !is.na(Uncut_F),Cut_F-Uncut_F,NA))
+#differences between N and F 
+exp.act.wide$CutDiff=with(exp.act.wide,ifelse(!is.na(Cut_N) & !is.na(Cut_F),Cut_N-Cut_F,NA))
+exp.act.wide$UncutDiff=with(exp.act.wide,ifelse(!is.na(Uncut_N) & !is.na(Uncut_F),Uncut_N-Uncut_F,NA))
+#######################
 
 
 #Write files
