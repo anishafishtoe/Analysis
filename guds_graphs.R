@@ -4,7 +4,7 @@ library(ggplot2)
 library(psych)
 
 #read gMean
-gMean=read.csv("gMean2106.csv")
+gMean=read.csv("gMean2106.csv")#This is same as gudMean.csv
 
 #drop full moon phase
 gMean.drop=gMean[-which(gMean$moonPhase=="Full"),]
@@ -22,8 +22,6 @@ with(guds, hist(GUD[Habitat=="Dense"], col="#04B4AE", add=T))
 legend("topleft", c("Sparse", "Dense"), col=c("#A4A4A4", "#04B4AE") ,pch=16)
 
 #How much did ants and birds eat up the seeds
-
-
 guds.ants=c(guds$GUDN[which(guds$AntBirdN=="A" & is.na(guds$PrintsInside))],guds$GUDF[which(guds$AntBirdF=="A" & is.na(guds$PrintsInside))] )
 boxplot(guds.ants, xlab="Ants", ylab="Number of seeds harvested")
 
@@ -38,7 +36,6 @@ gMean.subs=gMean[-which(is.na(gMean$meanGUD)),]
 which(is.na(gMean.subs$meanGUD))
 
 #effect of moon phase
-
 gud.mPhase=with(gMeanVisited, describeBy(meanGUD, moonPhase, mat=T, digits=4))
 names(gud.mPhase)[names(gud.mPhase)=="group1"]="MoonPhase"
 limits=with(gud.mPhase,aes(ymax=mean+se, ymin=mean-se))
@@ -50,8 +47,8 @@ ggplot(gud.mPhase, aes(x=MoonPhase, y=mean))+
   theme_set(theme_gray(base_size = 20))+
   scale_fill_grey()
 
-#effect of habitat
 
+#effect of habitat
 gud.hab=with(gMeanVisited, describeBy(meanGUD, habitat, mat=T, digits=4))
 names(gud.hab)[names(gud.hab)=="group1"]="Habitat"
 limits=with(gud.hab,aes(ymax=mean+se, ymin=mean-se))
