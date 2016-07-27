@@ -1,4 +1,4 @@
-#REF models for GUDS of tree cutting experiment
+expGudMean=read.csv("expGudsMean.csv")
 
 library(lme4)
 library(car)
@@ -40,7 +40,7 @@ gamma=fitdistr(expGuds$GUD, "gamma")
 qqp(expGuds$GUD, "gamma", shape=gamma$estimate[[1]], rate=gamma$estimate[[2]])
 
 #lmm
-gud.full=lmer(data=expGuds, GUD~BefOnAft+NF+BefOnAft+cutUncut+BefOnAft*cutUncut*NF+(1|fStn), REML=FALSE)
+gud.full=lmer(data=expGuds, GUD~BefOnAft+NF+BefOnAft+cutUncut+BefOnAft*cutUncut*NF+(1|fStn))
 Anova(gud.full)
 gud.BefOnAft=lmer(data=expGuds, GUD~BefOnAft+(1|fStn), REML=FALSE)
 gud.cutUncut=lmer(data=expGuds, GUD~cutUncut+(1|fStn), REML=FALSE)
@@ -58,4 +58,41 @@ require(lsmeans)
   #3way
   lsm.3way=lsmeans(gud.3way, ~BefOnAft*cutUncut*NF)
   summary(lsm.3way, type="response")
+  
+#1806
+gud.full=lmer(data=expGudMean, meanGUD~BefOnAft+cutUncut+FeedingTrayPosition+(1|fStn))
+plot(gud.full)
+qqnorm(residuals(gud.full))
+qqline(residuals(gud.full))
+Anova(gud.full)
+
+gud.aov=aov(data=expGudMean, meanGUD~cutUncut+BefOnAft+FeedingTrayPosition+cutUncut:BefOnAft +
+              cutUncut:FeedingTrayPosition+FeedingTrayPosition:BefOnAft+
+              cutUncut:FeedingTrayPosition:BefOnAft+Error(fStn))
+
+
+expG.full=lmer(data=expGudMean, meanGUD~cutUncut+BefOnAft+FeedingTrayPosition+cutUncut:BefOnAft +
+                       cutUncut:FeedingTrayPosition+FeedingTrayPosition:BefOnAft+
+                 FeedingTrayPosition:BefOnAft:cutUncut+
+                     (1|fStn))
+expG.additive=lmer(data=expGudMean, meanGUD~cutUncut+BefOnAft+FeedingTrayPosition+cutUncut:BefOnAft+(1|fStn), REML=FALSE)
+expG.no3way=update(expG.full,.~.-cutUncut:FeedingTrayPosition:BefOnAft,REML=FALSE)
+expG.noMicroTime=update(expG.no3way,.~.-FeedingTrayPosition:BefOnAft,REML=FALSE)
+expG.noCutMicro=update(expG.noMicroTime,.~.-cutUncut:FeedingTrayPosition,REML=FALSE)
+expG.noCutTime=update(expG.noCutMicro,.~.-cutUncut:BefOnAft,REML=FALSE)
+expG.noFtray=update(expG.noCutTime,.~.-FeedingTrayPosition,REML=FALSE)
+expG.noTime=update(expG.noFtray,.~.-BefOnAft,REML=FALSE)
+expG.noCut=update(expG.noFtray,.~.-cutUncut,REML=FALSE)
+summary(expG.noCut)
+
+anova(expG.no3way, expG.full)
+anova(expG.noMicroTime, expG.no3way)
+anova(expG.noCutMicro, expG.noMicroTime)
+anova(expG.noCutTime, expG.noCutMicro)
+anova(expG.noTime, expG.noFtray)
+anova(expG.noCut, expG.noFtray)
+
+cutTime=lsmeans(expG.additive, c("BefOnAft","cutUncut"))
+treatT.letters=cld(cutTime, Letters=letters)
+lsmeans(expG.full, pairwise~cutUncut:BefOnAft) #pairwise results
   
