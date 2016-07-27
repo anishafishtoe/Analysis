@@ -3,9 +3,6 @@
 setwd("F:/NCBS/Thesis/Data/")
 guds=read.csv("GUDs.csv")
 
-#Read new GudClean file
-gudJoin1=read.csv("GUDClean1706.csv")
-gudJoinNA.RM=gudJoin1[-which(is.na(gudJoin1$GUD)),]
 
 #IMP- correct Moon phase of gMean
 gMean$moonPhase=gMean$moonPhase[gMean$phaseRep=="Wane1"]="Wane"
@@ -180,15 +177,6 @@ colnames(gMeanVisited)[6]="meanGUD"
 colnames(gMeanVisited)[colnames(gMeanVisited)=="NF"]="FeedingTrayPosition"
 
 gMeanVisited=arrange(gMeanVisited,phaseRep, fStn)
-
-#2706-- checking if removing NAs from gudJoin1 corresponds to gMean
-gudJoin2=gudJoin1[-which(is.na(gudJoin1$GUD)),]
-gMean.narm=with(gudJoin2,aggregate(GUD, by=list(phaseRep=phaseRep, fStn=FStn, NF=NF, habitat=Habitat, moonPhase=MoonPhase), mean))
-colnames(gMean.narm)[6]="meanGUD"
-colnames(gMean.narm)[colnames(gMean.narm)=="NF"]="FeedingTrayPosition"
-
-
-
 
 
 
