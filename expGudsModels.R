@@ -39,15 +39,6 @@ qqp(expGuds$GUD, "pois", poisson$estimate)
 gamma=fitdistr(expGuds$GUD, "gamma")
 qqp(expGuds$GUD, "gamma", shape=gamma$estimate[[1]], rate=gamma$estimate[[2]])
 
-#lmm
-gud.full=lmer(data=expGuds, GUD~BefOnAft+NF+BefOnAft+cutUncut+BefOnAft*cutUncut*NF+(1|fStn))
-Anova(gud.full)
-gud.BefOnAft=lmer(data=expGuds, GUD~BefOnAft+(1|fStn), REML=FALSE)
-gud.cutUncut=lmer(data=expGuds, GUD~cutUncut+(1|fStn), REML=FALSE)
-gud.TimeCut=lmer(data=expGuds, GUD~BefOnAft*cutUncut+(1|fStn), REML=FALSE)
-gud.cutNF=lmer(data=expGuds, GUD~cutUncut*NF+(1|fStn), REML=FALSE)
-gud.3way=lmer(data=expGuds, GUD~cutUncut*NF+BefOnAft*NF*cutUncut+(1|fStn), REML=FALSE)
-anova(gud.BefOnAft, gud.cutUncut, gud.TimeCut, gud.cutNF, gud.3way)
 
 #post hoc test
 require(lsmeans)
