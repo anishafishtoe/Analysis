@@ -38,117 +38,10 @@ gMean.drop1$fStn=factor(gMean.drop1$fStn)
 #Are GUDS normal?
 hist(gMean$meanGUD, main="", xlab="Mean GUD")
 hist(log(gMean$meanGUD))
-#main effects, no interaction
-
-microhabitat=lmer(meanGUD~FeedingTrayPosition+(1|fStn), REML=FALSE, data=gMean, family="poisson")
-habitat=lmer(meanGUD~habitat+(1|fStn), REML=FALSE, data=gMean)
-moonPhase=lmer(meanGUD~moonPhase+(1|fStn), REML=FALSE, data=gMean)
-month=lmer(meanGUD~month+(1|fStn), REML=FALSE, data=gMean)
-
-
-#Full model and significance testing for fixed effects
-full.model=lmer(meanGUD~FeedingTrayPosition+habitat+moonPhase+month+FeedingTrayPosition*habitat+FeedingTrayPosition*moonPhase+moonPhase*habitat +habitat*month +FeedingTrayPosition*habitat*month+habitat*moonPhase*month+FeedingTrayPosition*moonPhase*habitat+(1|fStn), data=gMean, REML=FALSE)
-Anova(full.model)
-
-#GLMM with Laplace
-summary(glmer(meanGUD~FeedingTrayPosition+habitat+moonPhase+month+FeedingTrayPosition*habitat+
-                FeedingTrayPosition*moonPhase+moonPhase*habitat +habitat*month +
-                FeedingTrayPosition*habitat*month+habitat*moonPhase*month+
-                FeedingTrayPosition*moonPhase*habitat+(1|fStn), data= gMean, family= Gamma(link="log")))
-
-#0906
-gud.lmer.fullmodel=lmer(data=gMean, log10(meanGUD+1)~ moonPhase*habitat*FeedingTrayPosition*month +(1|fStn), REML=FALSE)
-plot(gud.lmer.fullmodel)
-
-res= residuals(gud.lmer.fullmodel)
-fit= fitted(gud.lmer.fullmodel)
-op <- par(mfrow = c(2, 3), mar = c(4, 4, 3, 2))
-plot(x=fit, y=res, xlab="Fitted", ylab="Residuals")
-boxplot(res~moonPhase, data= gMean, ylab="Residuals")
-boxplot(res~habitat, data= gMean, ylab="Residuals")
-boxplot(res~FeedingTrayPosition, data= gMean, ylab="Residuals")
-boxplot(res~month, data= gMean, ylab="Residuals")
-
-Anova(gud.lmer.fullmodel)
-
-gud.sigmodel=lmer(data=gMean, log10(meanGUD+1)~month+habitat*month+(1|fStn), REML=FALSE)
-anova(gud.lmer.fullmodel, gud.sigmodel)
-
-gud.lmer.full.month=lmer(data=subset(gMean, month =="Month2"), meanGUD~ moonPhase*habitat*FeedingTrayPosition +(1|fStn), REML=FALSE)
-plot(gud.lmer.fullmodel)
-Anova(gud.lmer.full.month)
-
-#16-06
-
-gMean.subs=gMean[-which(is.na(gMean$meanGUD)),]
-
-gud.nonaT2=lmer(data=gMean, meanGUD~ moonPhase+habitat+FeedingTrayPosition+season+
-                moonPhase:habitat + moonPhase:FeedingTrayPosition + moonPhase:season+
-                  habitat:FeedingTrayPosition+
-                  habitat:season+  moonPhase:habitat:FeedingTrayPosition +
-                  habitat:moonPhase:season+ (1|fStn))
-plot(gud.nonaT2)
-qqnorm(residuals(gud.nonaT2))
-qqline(residuals(gud.nonaT2))
-hist(residuals(gud.visit))
-summary(gud.full)
-Anova(gud.nonaT2)
-
-
-#AOV with no transformation
-gud.aov=aov(data=gMean, meanGUD~ moonPhase+habitat+FeedingTrayPosition+season+
-  moonPhase:habitat + moonPhase:FeedingTrayPosition + moonPhase:season+
-  habitat:FeedingTrayPosition+
-  habitat:season+  moonPhase:habitat:FeedingTrayPosition +
-  habitat:moonPhase:season+ Error(fStn))
-summary(gud.aov)
-
-
-hist(gMeanVisit.trans$meanGUD)
-
-plot(gMean.trans$habitat, residuals(gud.nonaT2))
-
-#post-hoc for habitat-season
-model.habseas=lmer(data=gMean, meanGUD~ habitat+ season+habitat:season + 
-                     + (1|fStn))
-plot(model.habseas)
-qqnorm(residuals(model.habseas))
-qqline(residuals(model.habseas))
-act.ref=ref.grid(model.habseas)
-act.contrast=contrast(act.ref, "pairwise")
 
 
 
-Anova(gud.nonaT2)
-gud.red=lmer(meanGUD~habitat+season+habitat:season+(1|fStn), data=gMean)
-plot(gud.red)
 
-plot(gud.full, fStn~resid(.), abline=0)
-plot(gud.full, fStn~resid(., type="p")~fitted(.)|habitat,adj=-0.3)
-
-
-
-#transform response
-gMean.trans=gMean.subs
-gMean.trans$meanGUD=asin(gMean$meanGUD/3)
-gMean.noFull=gMean[-which(gMean$moonPhase=="Full"),]
-
-#LMM for no full moon phase
-gud.noFull=rlmer(data=gMean, meanGUD~ moonPhase+habitat+FeedingTrayPosition+season+
-                  moonPhase:habitat + moonPhase:FeedingTrayPosition + moonPhase:season+
-                  habitat:FeedingTrayPosition+
-                  habitat:season+  moonPhase:habitat:FeedingTrayPosition +
-                  habitat:moonPhase:season+ (1|fStn))
-aov.noFull=aov(data=gMean.drop1, meanGUD~ moonPhase+habitat+FeedingTrayPosition+season+
-              moonPhase:habitat + moonPhase:FeedingTrayPosition + moonPhase:season+
-              habitat:FeedingTrayPosition+
-              habitat:season+  moonPhase:habitat:FeedingTrayPosition +
-              habitat:moonPhase:season+ Error(fStn))
-summary(aov.noFull)
-plot(gud.noFull)
-qqnorm(residuals(gud.noFull))
-qqline(residuals(gud.noFull))
-Anova(gud.noFull)
 
 #ANOVAs with asine/log and with/without Error term
 gud.aov.log=aov(data=gMean.noFull, log(meanGUD)~ moonPhase+habitat+FeedingTrayPosition+season+
@@ -208,37 +101,6 @@ plot(gud.additive)
 qqnorm(residuals(gud.season1))
 qqline(residuals(gud.season1))
 Anova(gud.model)
-
-#LRT
-gud.null=lmer(data=gMean.drop, meanGUD~(1|fStn))
-gud.moon1= lmer(data=gMean.drop, meanGUD~ moonPhase +(1|fStn))
-gud.habitat1= lmer(data=gMean.drop, meanGUD~ habitat +(1|fStn))
-gud.microhab1=  lmer(data=gMean.drop, meanGUD~ FeedingTrayPosition +(1|fStn))
-gud.season1=  lmer(data=gMean.drop, meanGUD~ season +(1|fStn))
-gud.additive=lmer(data=gMean.drop, meanGUD~moonPhase+habitat+FeedingTrayPosition+season+(1|fStn))
-
-gud.moonHab1=lmer(data=gMean.drop, meanGUD~ moonPhase*habitat +(1|fStn))
-gud.moonSeason1=lmer(data=gMean.drop, meanGUD~ moonPhase*season +(1|fStn))
-gud.habMicro1=lmer(data=gMean.drop, meanGUD~ habitat*FeedingTrayPosition +(1|fStn))
-gud.habSeason1=lmer(data=gMean.drop, meanGUD~ habitat*season +(1|fStn))
-gud.moonHabMicrohab1=lmer(data=gMean.drop, meanGUD~ habitat*moonPhase*FeedingTrayPosition +(1|fStn))
-gud.habMicrohabSeason1=lmer(data=gMean.drop, meanGUD~ habitat*FeedingTrayPosition*season +(1|fStn))
-gud.moonHabSeason1=lmer(data=gMean.drop, meanGUD~ habitat*moonPhase*season +(1|fStn))
-
-#fixed effects
-anova(gud.moon1, gud.null)
-anova(gud.season1, gud.null)
-anova(gud.habitat1, gud.null)
-anova(gud.microhab1, gud.null)
-gud.additive=lmer(data=gMean.drop, meanGUD~season+habitat+FeedingTrayPosition+(1|fStn))
-#interaction
-anova(gud.moonHab1, gud.additive)
-anova(gud.moonSeason1, gud.additive)
-anova(gud.habMicro1, gud.additive)
-anova(gud.habSeason1, gud.additive)
-anova(gud.moonHabMicrohab1, gud.additive)
-anova(gud.habMicrohabSeason1, gud.additive)
-anova(gud.moonHabSeason1, gud.additive)
 
 #post hoc
 gud.fullDrop=lmer(data=gMean.drop, (meanGUD)~ habitat+FeedingTrayPosition+season+moonPhase+
